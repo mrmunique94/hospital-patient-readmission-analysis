@@ -1,0 +1,10 @@
+hospital-readmission/
+├── data/
+│   └── hospital_data.csv    # Kaggle se download kiya hua data
+├── notebooks/
+│   └── EDA_and_Cleaning.ipynb
+├── src/
+│   ├── preprocess.py        # Data cleaning code
+│   └── model_train.py       # ML Model code
+├── requirements.txt
+└── README.md
