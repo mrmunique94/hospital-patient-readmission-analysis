@@ -1,0 +1,59 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# 1. Data Load Karein
+# File path ko apne dataset ke naam se badlein
+df = pd.read_csv('data/hospital_data.csv') 
+
+# 2. Basic Preprocessing
+# Missing values check karein aur fill karein
+df.fillna(method='ffill', inplace=True)
+
+# Unnecessary columns drop karein (ID columns)
+drop_cols = ['patient_id', 'encounter_id', 'name']
+df = df.drop([c for c in drop_cols if c in df.columns], axis=1)
+
+# Categorical data ko numbers mein badlein (Label Encoding)
+le = LabelEncoder()
+categorical_cols = df.select_dtypes(include=['object']).columns
+for col in categorical_cols:
+    df[col] = le.fit_transform(df[col])
+
+# 3. Features aur Target split karein
+# Target variable usually 'readmitted' ya 'readmitted_30_days' hota hai
+target_col = 'readmitted' if 'readmitted' in df.columns else df.columns[-1]
+X = df.drop(target_col, axis=1)
+y = df[target_col]
+
+# 4. Train-Test Split (80% Train, 20% Test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Feature Scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# 5. Model Training (Random Forest)
+# Random Forest healthcare data ke liye kafi effective hai
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# 6. Prediction aur Evaluation
+y_pred = model.predict(X_test)
+
+print(f"--- Model Results ---")
+print(f"Accuracy: {accuracy_score(y_test, y_pred):.2f}")
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
+
+# 7. Importance of Features (Visualisation)
+plt.figure(figsize=(10, 6))
+feat_importances = pd.Series(model.feature_importances_, index=X.columns)
+feat_importances.nlargest(10).plot(kind='barh')
+plt.title('Top 10 Factors for Patient Readmission')
+plt.show()
